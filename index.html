@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Coffres">
@@ -79,6 +79,8 @@ body.showstats .tapwrap{display:none}
 .row{grid-template-columns:1fr 1.5fr}
 #newgame{border:2px solid var(--accent)}
 #tap .sub{font-size:17px}
+*{touch-action:manipulation}
+html,body{-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
 </style>
 </head>
 <body>
@@ -127,6 +129,7 @@ body.showstats .tapwrap{display:none}
 </div>
 
 <script>
+document.addEventListener('gesturestart',function(e){e.preventDefault();});
 var KEY='compteur-coffres-v1';
 var S={games:[0],history:[]};
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);if(p&&Array.isArray(p.games)&&p.games.length&&Array.isArray(p.history))S=p;}}catch(e){}
