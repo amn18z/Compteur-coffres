@@ -130,6 +130,7 @@ html,body{-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
 
 <script>
 document.addEventListener('gesturestart',function(e){e.preventDefault();});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)render();});
 var KEY='compteur-coffres-v1';
 var S={games:[0],history:[]};
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);if(p&&Array.isArray(p.games)&&p.games.length&&Array.isArray(p.history))S=p;}}catch(e){}
@@ -137,13 +138,16 @@ if(typeof S.offset!=='number')S.offset=0;
 if(typeof S.priorGames!=='number')S.priorGames=0;
 if(!Array.isArray(S.archives))S.archives=[];
 if(!S.days||typeof S.days!=='object'||Array.isArray(S.days))S.days={};
+if(!Array.isArray(S.gameDates)||S.gameDates.length!==S.games.length){S.gameDates=S.games.map(function(){return '';});S.gameDates[S.gameDates.length-1]=tk();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function sum(a){return a.reduce(function(x,y){return x+y;},0);}
 function fmt(n){return (Math.round(n*10)/10).toString().replace('.',',');}
 function render(){
   var g=S.games,cur=g[g.length-1],tot=sum(g);
   document.getElementById('total').textContent=tot+S.offset;
-  document.getElementById('gname').textContent='Game '+g.length;
+  var td=tk(),gc=0;
+  S.gameDates.forEach(function(d){if(d===td)gc++;});
+  document.getElementById('gname').textContent='Game '+(gc+(S.gameDates[S.gameDates.length-1]!==td?1:0));
   document.getElementById('bigcount').textContent=cur;
   document.getElementById('minusG').disabled=cur<=0;
   document.getElementById('minusT').disabled=(tot+S.offset)<=0;
@@ -166,7 +170,7 @@ function render(){
 function tk(){var d=new Date(),p=function(n){return (n<10?'0':'')+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function act(type){
   if(type==='c'){var k=tk();S.history.push({t:'c',d:k});S.games[S.games.length-1]++;S.days[k]=(S.days[k]||0)+1;}
-  else{S.history.push('g');S.games.push(0);}
+  else{S.history.push('g');var L=S.gameDates.length-1;if(S.gameDates[L]!==tk())S.gameDates[L]=tk();S.games.push(0);S.gameDates.push(tk());}
   save();render();
 }
 document.getElementById('tap').onclick=function(){act('c');};
@@ -175,7 +179,7 @@ document.getElementById('undo').onclick=function(){
   var t=S.history.pop();if(!t)return;
   if(typeof t==='object'){if(t.t==='p'){S.priorGames=t.pg;S.offset=t.po;}else if(t.t==='r'){if(t.gi>=0)S.games[t.gi]++;if(t.d)S.days[t.d]=(S.days[t.d]||0)+1;if(t.off)S.offset++;}else if(t.t==='c'){S.games[S.games.length-1]=Math.max(0,S.games[S.games.length-1]-1);if(S.days[t.d]){S.days[t.d]--;if(S.days[t.d]<=0)delete S.days[t.d];}}else if('prevOffset' in t)S.offset=t.prevOffset;else S.games[S.games.length-1]=t.prev;}
   else if(t==='c')S.games[S.games.length-1]=Math.max(0,S.games[S.games.length-1]-1);
-  else if(S.games.length>1)S.games.pop();
+  else if(S.games.length>1){S.games.pop();S.gameDates.pop();}
   save();render();
 };
 function renderDays(){
@@ -204,10 +208,10 @@ document.getElementById('archlist').onclick=function(e){
   pending=-1;
   var x=S.archives[i];if(!x)return;
   var tot=sum(S.games)+S.offset;
-  var cur=(tot>0||S.games.length>1)?{date:new Date().toISOString(),total:tot,games:S.games.slice(),offset:S.offset,days:JSON.parse(JSON.stringify(S.days)),priorGames:S.priorGames}:null;
+  var cur=(tot>0||S.games.length>1)?{date:new Date().toISOString(),total:tot,games:S.games.slice(),offset:S.offset,days:JSON.parse(JSON.stringify(S.days)),priorGames:S.priorGames,gameDates:S.gameDates.slice()}:null;
   S.archives.splice(i,1);
   if(cur)S.archives.push(cur);
-  S.games=x.games.length?x.games.slice():[0];S.offset=x.offset||0;S.history=[];S.days=x.days||{};S.priorGames=x.priorGames||0;
+  S.games=x.games.length?x.games.slice():[0];S.offset=x.offset||0;S.history=[];S.days=x.days||{};S.priorGames=x.priorGames||0;S.gameDates=(x.gameDates&&x.gameDates.length===S.games.length)?x.gameDates.slice():S.games.map(function(){return '';});
   save();render();
 };
 var rc=document.getElementById('resetconfirm'),rb=document.getElementById('resetbtn');
@@ -215,8 +219,8 @@ rb.onclick=function(){rc.classList.add('on');rb.style.display='none';};
 document.getElementById('resetno').onclick=function(){rc.classList.remove('on');rb.style.display='';};
 document.getElementById('resetyes').onclick=function(){
   var tot=sum(S.games)+S.offset;
-  if(tot>0||S.games.length>1)S.archives.push({date:new Date().toISOString(),total:tot,games:S.games.slice(),offset:S.offset,days:JSON.parse(JSON.stringify(S.days)),priorGames:S.priorGames});
-  S.games=[0];S.offset=0;S.history=[];S.days={};S.priorGames=0;pending=-1;
+  if(tot>0||S.games.length>1)S.archives.push({date:new Date().toISOString(),total:tot,games:S.games.slice(),offset:S.offset,days:JSON.parse(JSON.stringify(S.days)),priorGames:S.priorGames,gameDates:S.gameDates.slice()});
+  S.games=[0];S.gameDates=[tk()];S.offset=0;S.history=[];S.days={};S.priorGames=0;pending=-1;
   save();render();
   rc.classList.remove('on');rb.style.display='';
 };
