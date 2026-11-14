@@ -81,11 +81,28 @@ body.showstats .tapwrap{display:none}
 #tap .sub{font-size:17px}
 *{touch-action:manipulation}
 html,body{-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
+.dayrow{display:flex;flex-direction:column;gap:2px}
+.sub2{margin-left:74px;font-size:12px;color:var(--muted)}
+.fold{display:flex;justify-content:space-between;align-items:center;width:100%;background:var(--bg);border:0;border-radius:12px;padding:12px 14px;color:var(--text);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+#list{display:none}
+#list.open{display:flex}
+.chl{display:flex;align-items:center;gap:8px;margin-top:4px;color:var(--muted);font-size:15px;font-variant-numeric:tabular-nums}
+.mini{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;min-width:34px;height:30px;padding:0 10px;font-size:14px;cursor:pointer;font-family:inherit}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{border:0;background:var(--bg);color:var(--muted);border-radius:10px;padding:8px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-text)}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.row3 .btn{padding:12px 4px;font-size:14px}
+.note{font-size:13px;color:var(--muted)}
+#bkbox{display:none;flex-direction:column;gap:8px;background:var(--bg);border-radius:14px;padding:12px}
+#bkbox.on{display:flex}
+#bkgo{display:none;background:var(--accent);color:var(--accent-text);border:0}
+#bkgo.on{display:block}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><b id="gname">Game 1</b><button class="btn" id="statbtn">📊 Stats</button></div>
+  <div class="top"><div><b id="gname">Game 1</b><div class="chl"><span id="chtime">00:00</span></div></div><button class="btn" id="statbtn">📊 Stats</button></div>
   <div class="total"><div class="label">Total de coffres ouverts</div><div class="trow"><button class="minus sm" id="minusT" aria-label="Retirer un coffre du total">−</button><div class="n" id="total">0</div><button class="edit icon" id="editbtn" aria-label="Modifier le total">✏️</button></div></div>
     <div id="editbox"><input id="editinput" type="number" inputmode="numeric" min="0" step="1" placeholder="Total de coffres"><button id="editok">OK</button></div>
 
@@ -95,11 +112,14 @@ html,body{-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
     <div class="kpis">
       <div class="kpi"><div class="v" id="avg">0</div><div class="label">Moy. / game</div></div>
       <div class="kpi"><div class="v" id="ngames">1</div><div class="label">Games</div></div>
-      <div class="kpi"><div class="v" id="best">0</div><div class="label">Meilleure game</div></div>
-      <div class="kpi"><div class="v" id="avgdone">–</div><div class="label">Moy. games finies</div></div>
       <div class="kpi"><div class="v" id="today">0</div><div class="label">Aujourd’hui</div></div>
       <div class="kpi"><div class="v" id="avgday">–</div><div class="label">Moy. / jour joué</div></div>
+      <div class="kpi"><div class="v" id="cph">–</div><div class="label">Coffres / heure</div></div>
+      <div class="kpi"><div class="v" id="best">0</div><div class="label">Meilleure game</div></div>
     </div>
+    <div class="label">Graphique</div>
+    <div class="seg"><button class="on" id="rng7">7 jours</button><button id="rng30">30 jours</button></div>
+    <div id="chart"></div>
     <button class="btn" id="priorbtn">✏️ Mes stats avant l’app</button>
     <div id="priorbox">
       <small>Pour une moyenne fiable : entre toutes les games déjà jouées avant l’app et les coffres ouverts dans ces games.</small>
@@ -109,12 +129,26 @@ html,body{-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
       <input class="pin" id="priorchests" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex. 340">
       <button class="btn" id="priorok" style="background:var(--accent);color:var(--accent-text);border:0">Enregistrer</button>
     </div>
-    <div class="label">Détail par game</div>
+    <button class="fold" id="gamesfold"><span>Détail par game</span><span id="gamesarrow">▸</span></button>
     <div class="list" id="list"></div>
     <div class="label" style="margin-top:12px">Coffres par jour</div>
     <div class="list" id="daylist"></div>
     <div class="label" id="archlabel" style="display:none;margin-top:12px">Anciennes sessions (sauvegardées)</div>
     <div class="list" id="archlist"></div>
+    <div class="label" style="margin-top:12px">Sauvegarde</div>
+    <div class="row3">
+      <button class="btn" id="bkexport">📤 Exporter</button>
+      <button class="btn" id="bkcopy">📋 Copier</button>
+      <button class="btn" id="bkimport">📥 Importer</button>
+    </div>
+    <div id="bkmsg" class="note"></div>
+    <div id="bkbox">
+      <button class="btn" id="bkpick">📁 Choisir un fichier</button>
+      <input type="file" id="bkfile" accept=".json,application/json,text/plain" style="display:none">
+      <textarea class="pin" id="bktext" rows="3" placeholder="…ou colle ici ta sauvegarde" style="font-size:14px;font-weight:400"></textarea>
+      <button class="btn" id="bktextgo">Lire le texte collé</button>
+      <button class="btn" id="bkgo">Remplacer mes stats actuelles</button>
+    </div>
     <button class="btn danger" id="resetbtn" style="margin-top:12px">🗑️ Réinitialiser toutes les stats</button>
     <div id="resetconfirm">
       <div>Tout remettre à zéro ? Les stats actuelles seront <b>sauvegardées</b> dans « Anciennes sessions ».</div>
@@ -139,6 +173,8 @@ if(typeof S.priorGames!=='number')S.priorGames=0;
 if(!Array.isArray(S.archives))S.archives=[];
 if(!S.days||typeof S.days!=='object'||Array.isArray(S.days))S.days={};
 if(!Array.isArray(S.gameDates)||S.gameDates.length!==S.games.length){S.gameDates=S.games.map(function(){return '';});S.gameDates[S.gameDates.length-1]=tk();}
+if(!Array.isArray(S.times)||S.times.length!==S.games.length)S.times=S.games.map(function(){return 0;});
+if(typeof S.runSince!=='number')S.runSince=null;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function sum(a){return a.reduce(function(x,y){return x+y;},0);}
 function fmt(n){return (Math.round(n*10)/10).toString().replace('.',',');}
@@ -155,31 +191,54 @@ function render(){
   var pg=S.priorGames||0;
   document.getElementById('avg').textContent=fmt(pg>0?(tot+S.offset)/(g.length+pg):tot/g.length);
   document.getElementById('ngames').textContent=g.length+pg;
+  var tm=0,tc=0,tn=0;
+  for(var q=0;q<g.length;q++){var mq=S.times[q]+(q===g.length-1&&S.runSince?Date.now()-S.runSince:0);if(mq>=60000){tm+=mq;tc+=g[q];tn++;}}
+  document.getElementById('cph').textContent=tm?fmt(tc/(tm/3600000)):'–';
   document.getElementById('best').textContent=Math.max.apply(null,g);
-  var done=g.slice(0,-1);
-  var dn=done.length+pg;
-  document.getElementById('avgdone').textContent=dn?fmt((sum(done)+(pg>0?S.offset:0))/dn):'–';
   var max=Math.max.apply(null,g.concat([1])),html='';
   for(var i=g.length-1;i>=0;i--){
-    html+='<div class="item"><span class="g">Game '+(i+1)+(i===g.length-1?' ●':'')+'</span><span class="bar"><i style="width:'+(g[i]/max*100)+'%"></i></span><span class="v">'+g[i]+'</span></div>';
+    var ms=S.times[i]+(i===g.length-1&&S.runSince?Date.now()-S.runSince:0),sub='';
+    if(ms>0)sub=fmtT(ms)+(ms>=60000?' · '+fmt(g[i]/(ms/3600000))+' coffres/h':'');
+    html+='<div class="dayrow"><div class="item"><span class="g">Game '+(i+1)+(i===g.length-1?' ●':'')+'</span><span class="bar"><i style="width:'+(g[i]/max*100)+'%"></i></span><span class="v">'+g[i]+'</span></div>'+(sub?'<div class="sub2">'+sub+'</div>':'')+'</div>';
   }
   if(pg>0)html+='<div class="item"><span class="g">Avant</span><span style="flex:1;color:var(--muted)">'+pg+' games</span><span class="v" style="width:auto">'+S.offset+'</span></div>';
   document.getElementById('list').innerHTML=html;
-  renderArch();renderDays();
+  renderArch();renderDays();renderChart();updChrono();
 }
 function tk(){var d=new Date(),p=function(n){return (n<10?'0':'')+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function act(type){
-  if(type==='c'){var k=tk();S.history.push({t:'c',d:k});S.games[S.games.length-1]++;S.days[k]=(S.days[k]||0)+1;}
-  else{S.history.push('g');var L=S.gameDates.length-1;if(S.gameDates[L]!==tk())S.gameDates[L]=tk();S.games.push(0);S.gameDates.push(tk());}
+  if(type==='c'){
+    var k=tk(),e={t:'c',d:k};
+    if(S.runSince==null&&S.times[S.times.length-1]===0){S.runSince=Date.now();e.st=true;}
+    S.history.push(e);S.games[S.games.length-1]++;S.days[k]=(S.days[k]||0)+1;
+  }else{
+    var L2=S.gameDates.length-1;
+    S.history.push({t:'g',rs:S.runSince,tm:S.times[S.times.length-1]});
+    if(S.gameDates[L2]!==tk())S.gameDates[L2]=tk();
+    foldRun();S.games.push(0);S.gameDates.push(tk());S.times.push(0);
+  }
   save();render();
 }
-document.getElementById('tap').onclick=function(){act('c');};
+var hapEl=null;
+function buzz(){
+  try{
+    if(navigator.vibrate){navigator.vibrate(15);return;}
+    if(!hapEl){
+      var l=document.createElement('label'),i=document.createElement('input');
+      l.style.cssText='position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none';
+      i.type='checkbox';i.setAttribute('switch','');
+      l.appendChild(i);document.body.appendChild(l);hapEl=l;
+    }
+    hapEl.click();
+  }catch(e){}
+}
+document.getElementById('tap').onclick=function(){buzz();act('c');};
 document.getElementById('newgame').onclick=function(){act('g');};
 document.getElementById('undo').onclick=function(){
   var t=S.history.pop();if(!t)return;
-  if(typeof t==='object'){if(t.t==='p'){S.priorGames=t.pg;S.offset=t.po;}else if(t.t==='r'){if(t.gi>=0)S.games[t.gi]++;if(t.d)S.days[t.d]=(S.days[t.d]||0)+1;if(t.off)S.offset++;}else if(t.t==='c'){S.games[S.games.length-1]=Math.max(0,S.games[S.games.length-1]-1);if(S.days[t.d]){S.days[t.d]--;if(S.days[t.d]<=0)delete S.days[t.d];}}else if('prevOffset' in t)S.offset=t.prevOffset;else S.games[S.games.length-1]=t.prev;}
+  if(typeof t==='object'){if(t.t==='p'){S.priorGames=t.pg;S.offset=t.po;}else if(t.t==='r'){if(t.gi>=0)S.games[t.gi]++;if(t.d)S.days[t.d]=(S.days[t.d]||0)+1;if(t.off)S.offset++;if(t.chr){S.runSince=t.chr.rs;S.times[t.gi]=t.chr.tm;}}else if(t.t==='c'){S.games[S.games.length-1]=Math.max(0,S.games[S.games.length-1]-1);if(S.days[t.d]){S.days[t.d]--;if(S.days[t.d]<=0)delete S.days[t.d];}if(t.st){S.runSince=null;S.times[S.times.length-1]=0;}}else if(t.t==='g'){if(S.games.length>1){S.games.pop();S.gameDates.pop();S.times.pop();S.times[S.times.length-1]=t.tm;S.runSince=t.rs;}}else if('prevOffset' in t)S.offset=t.prevOffset;else S.games[S.games.length-1]=t.prev;}
   else if(t==='c')S.games[S.games.length-1]=Math.max(0,S.games[S.games.length-1]-1);
-  else if(S.games.length>1){S.games.pop();S.gameDates.pop();}
+  else if(S.games.length>1){S.games.pop();S.gameDates.pop();S.times.pop();}
   save();render();
 };
 function renderDays(){
@@ -187,7 +246,13 @@ function renderDays(){
   k.forEach(function(x){tot+=S.days[x];if(S.days[x]>max)max=S.days[x];});
   document.getElementById('today').textContent=S.days[t]||0;
   document.getElementById('avgday').textContent=k.length?fmt(tot/k.length):'–';
-  k.slice(0,30).forEach(function(x){var p=x.split('-');h+='<div class="item"><span class="g">'+p[2]+'/'+p[1]+(x===t?' ●':'')+'</span><span class="bar"><i style="width:'+(S.days[x]/max*100)+'%"></i></span><span class="v">'+S.days[x]+'</span></div>';});
+  k.slice(0,30).forEach(function(x){
+    var p=x.split('-'),n=0,c=S.days[x];
+    S.gameDates.forEach(function(d){if(d===x)n++;});
+    if(x===t&&S.gameDates[S.gameDates.length-1]!==t)n++;
+    var detail=c+(c>1?' coffres':' coffre')+(n>0?' pour '+n+' game'+(n>1?'s':'')+' = '+fmt(c/n)+' coffres/game':'');
+    h+='<div class="dayrow"><div class="item"><span class="g">'+p[2]+'/'+p[1]+(x===t?' ●':'')+'</span><span class="bar"><i style="width:'+(c/max*100)+'%"></i></span><span class="v">'+c+'</span></div><div class="sub2">'+detail+'</div></div>';
+  });
   document.getElementById('daylist').innerHTML=h||'<span style="color:var(--muted);font-size:14px">Les jours apparaîtront dès le prochain coffre.</span>';
 }
 var pending=-1;
@@ -207,20 +272,23 @@ document.getElementById('archlist').onclick=function(e){
   if(pending!==i){pending=i;renderArch();return;}
   pending=-1;
   var x=S.archives[i];if(!x)return;
+  foldRun();
   var tot=sum(S.games)+S.offset;
-  var cur=(tot>0||S.games.length>1)?{date:new Date().toISOString(),total:tot,games:S.games.slice(),offset:S.offset,days:JSON.parse(JSON.stringify(S.days)),priorGames:S.priorGames,gameDates:S.gameDates.slice()}:null;
+  var cur=(tot>0||S.games.length>1)?{date:new Date().toISOString(),total:tot,games:S.games.slice(),offset:S.offset,days:JSON.parse(JSON.stringify(S.days)),priorGames:S.priorGames,gameDates:S.gameDates.slice(),times:S.times.slice()}:null;
   S.archives.splice(i,1);
   if(cur)S.archives.push(cur);
   S.games=x.games.length?x.games.slice():[0];S.offset=x.offset||0;S.history=[];S.days=x.days||{};S.priorGames=x.priorGames||0;S.gameDates=(x.gameDates&&x.gameDates.length===S.games.length)?x.gameDates.slice():S.games.map(function(){return '';});
+  S.times=(x.times&&x.times.length===S.games.length)?x.times.slice():S.games.map(function(){return 0;});S.runSince=null;
   save();render();
 };
 var rc=document.getElementById('resetconfirm'),rb=document.getElementById('resetbtn');
 rb.onclick=function(){rc.classList.add('on');rb.style.display='none';};
 document.getElementById('resetno').onclick=function(){rc.classList.remove('on');rb.style.display='';};
 document.getElementById('resetyes').onclick=function(){
+  foldRun();
   var tot=sum(S.games)+S.offset;
-  if(tot>0||S.games.length>1)S.archives.push({date:new Date().toISOString(),total:tot,games:S.games.slice(),offset:S.offset,days:JSON.parse(JSON.stringify(S.days)),priorGames:S.priorGames,gameDates:S.gameDates.slice()});
-  S.games=[0];S.gameDates=[tk()];S.offset=0;S.history=[];S.days={};S.priorGames=0;pending=-1;
+  if(tot>0||S.games.length>1)S.archives.push({date:new Date().toISOString(),total:tot,games:S.games.slice(),offset:S.offset,days:JSON.parse(JSON.stringify(S.days)),priorGames:S.priorGames,gameDates:S.gameDates.slice(),times:S.times.slice()});
+  S.games=[0];S.gameDates=[tk()];S.times=[0];S.runSince=null;S.offset=0;S.history=[];S.days={};S.priorGames=0;pending=-1;
   save();render();
   rc.classList.remove('on');rb.style.display='';
 };
@@ -240,6 +308,127 @@ document.getElementById('priorok').onclick=function(){
   S.priorGames=g;S.offset=c;
   save();render();pb.classList.remove('on');
 };
+document.getElementById('gamesfold').onclick=function(){
+  var l=document.getElementById('list');
+  l.classList.toggle('open');
+  document.getElementById('gamesarrow').textContent=l.classList.contains('open')?'▾':'▸';
+};
+function fmtT(ms){
+  var t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),c=t%60,p=function(n){return (n<10?'0':'')+n;};
+  return h>0?h+':'+p(m)+':'+p(c):p(m)+':'+p(c);
+}
+function foldRun(){var L=S.times.length-1;if(S.runSince){S.times[L]+=Date.now()-S.runSince;S.runSince=null;}}
+function updChrono(){
+  var L=S.times.length-1,ms=S.times[L]+(S.runSince?Date.now()-S.runSince:0),el=document.getElementById('chtime');
+  el.textContent=(ms===0&&!S.runSince)?'⏱ démarre au 1er coffre':'⏱ '+fmtT(ms);
+  el.style.color=S.runSince?'var(--accent)':'';
+}
+setInterval(function(){if(S.runSince&&!document.hidden)updChrono();},1000);
+
+var rng=7;
+function keyOf(d){var p=function(n){return (n<10?'0':'')+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function renderChart(){
+  var n=rng,vals=[],labs=[],max=1,now=new Date(),i,j;
+  for(i=n-1;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i),v=S.days[keyOf(d)]||0;vals.push(v);labs.push(d.getDate());if(v>max)max=v;}
+  var W=320,H=140,pl=6,pr=6,pt=18,pb=22,cw=(W-pl-pr)/n,bw=cw*0.68;
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Coffres par jour">';
+  svg+='<line x1="'+pl+'" y1="'+(H-pb)+'" x2="'+(W-pr)+'" y2="'+(H-pb)+'" style="stroke:var(--line)"/>';
+  for(j=0;j<n;j++){
+    var h=(H-pt-pb)*vals[j]/max,x=pl+j*cw+(cw-bw)/2,y=H-pb-h,cx=(x+bw/2).toFixed(1);
+    svg+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(vals[j]>0?Math.max(h,1.5):0).toFixed(1)+'" rx="3" style="fill:var(--accent);opacity:'+(j===n-1?1:.7)+'"/>';
+    if(vals[j]>0&&(n===7||vals[j]===max))svg+='<text x="'+cx+'" y="'+(y-4).toFixed(1)+'" text-anchor="middle" style="fill:var(--text);font-size:10px;font-weight:700">'+vals[j]+'</text>';
+    if(n===7||j%5===0||j===n-1)svg+='<text x="'+cx+'" y="'+(H-7)+'" text-anchor="middle" style="fill:var(--muted);font-size:10px">'+labs[j]+'</text>';
+  }
+  document.getElementById('chart').innerHTML=svg+'</svg>';
+}
+function setRng(r){
+  rng=r;
+  document.getElementById('rng7').classList.toggle('on',r===7);
+  document.getElementById('rng30').classList.toggle('on',r===30);
+  renderChart();
+}
+document.getElementById('rng7').onclick=function(){setRng(7);};
+document.getElementById('rng30').onclick=function(){setRng(30);};
+
+function bkMsg(t){document.getElementById('bkmsg').textContent=t;}
+function backupText(){
+  var d=JSON.parse(JSON.stringify(S));
+  if(d.runSince){d.times[d.times.length-1]+=Date.now()-d.runSince;d.runSince=null;}
+  return JSON.stringify({app:'compteur-coffres',v:1,exportedAt:new Date().toISOString(),data:d});
+}
+function copyText(txt,okMsg){
+  function fb(){
+    var ta=document.createElement('textarea'),ok=false;
+    ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    try{ta.setSelectionRange(0,ta.value.length);ok=document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);
+    bkMsg(ok?okMsg:'Impossible de copier. Réessaie.');
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){bkMsg(okMsg);},fb);else fb();
+}
+document.getElementById('bkexport').onclick=function(){
+  var txt=backupText(),name='coffres-sauvegarde-'+tk()+'.json';
+  try{
+    var file=new File([txt],name,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:'Sauvegarde Compteur de coffres'}).then(function(){bkMsg('Sauvegarde partagée. Enregistre-la dans Fichiers.');}).catch(function(e){if(!e||e.name!=='AbortError')copyText(txt,'Partage impossible : sauvegarde copiée à la place.');});
+      return;
+    }
+  }catch(e){}
+  copyText(txt,'Sauvegarde copiée. Colle-la dans une note pour la garder.');
+};
+document.getElementById('bkcopy').onclick=function(){copyText(backupText(),'Sauvegarde copiée. Colle-la dans une note pour la garder.');};
+
+var pendingImp=null;
+function parseBackup(txt){
+  var o;try{o=JSON.parse(txt);}catch(e){return null;}
+  if(o&&o.data&&typeof o.data==='object')o=o.data;
+  if(!o||!Array.isArray(o.games)||!o.games.length)return null;
+  var g=o.games.map(function(x){x=parseInt(x,10);return isNaN(x)||x<0?0:x;}),n=g.length,dd={};
+  if(o.days&&typeof o.days==='object')Object.keys(o.days).forEach(function(k){var v=parseInt(o.days[k],10);if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&v>0)dd[k]=v;});
+  return {
+    games:g,history:[],
+    offset:parseInt(o.offset,10)||0,
+    priorGames:Math.max(0,parseInt(o.priorGames,10)||0),
+    days:dd,
+    gameDates:(Array.isArray(o.gameDates)&&o.gameDates.length===n)?o.gameDates.map(function(x){return typeof x==='string'?x:'';}):g.map(function(){return '';}),
+    times:(Array.isArray(o.times)&&o.times.length===n)?o.times.map(function(x){x=Number(x);return isNaN(x)||x<0?0:x;}):g.map(function(){return 0;}),
+    runSince:null,
+    archives:(Array.isArray(o.archives)?o.archives:[]).filter(function(a){return a&&Array.isArray(a.games);})
+  };
+}
+function readImport(txt){
+  var o=parseBackup(txt),go=document.getElementById('bkgo');
+  if(!o){pendingImp=null;go.classList.remove('on');bkMsg('Sauvegarde invalide : rien n’a été modifié.');return;}
+  pendingImp=o;go.classList.add('on');
+  bkMsg('Sauvegarde valide : '+(sum(o.games)+o.offset)+' coffres, '+(o.games.length+o.priorGames)+' games. Tes stats actuelles seront gardées dans « Anciennes sessions ».');
+}
+document.getElementById('bkimport').onclick=function(){document.getElementById('bkbox').classList.toggle('on');};
+document.getElementById('bkpick').onclick=function(){document.getElementById('bkfile').click();};
+document.getElementById('bkfile').onchange=function(){
+  var f=this.files&&this.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){readImport(String(r.result));};
+  r.onerror=function(){bkMsg('Lecture du fichier impossible.');};
+  r.readAsText(f);
+  this.value='';
+};
+document.getElementById('bktextgo').onclick=function(){readImport(document.getElementById('bktext').value);};
+document.getElementById('bkgo').onclick=function(){
+  if(!pendingImp)return;
+  foldRun();
+  var tot=sum(S.games)+S.offset,cur=null,seen={},all=[];
+  if(tot>0||S.games.length>1)cur={date:new Date().toISOString(),total:tot,games:S.games.slice(),offset:S.offset,days:JSON.parse(JSON.stringify(S.days)),priorGames:S.priorGames,gameDates:S.gameDates.slice(),times:S.times.slice()};
+  S.archives.concat(pendingImp.archives).forEach(function(a){var k=a.date+'|'+a.total;if(!seen[k]){seen[k]=1;all.push(a);}});
+  if(cur)all.push(cur);
+  var n=pendingImp;n.archives=all;S=n;pendingImp=null;pending=-1;
+  document.getElementById('bkgo').classList.remove('on');
+  document.getElementById('bktext').value='';
+  document.getElementById('bkbox').classList.remove('on');
+  save();render();bkMsg('Sauvegarde importée.');
+};
+
 function removeChest(onlyCurrent){
   var gi=S.games.length-1;
   if(S.games[gi]<=0){
@@ -250,6 +439,7 @@ function removeChest(onlyCurrent){
   var e={t:'r',gi:gi,d:null,off:false};
   if(gi>=0){
     S.games[gi]--;
+    if(gi===S.games.length-1&&S.games[gi]===0&&(S.runSince!==null||S.times[gi]>0)){e.chr={rs:S.runSince,tm:S.times[gi]};S.runSince=null;S.times[gi]=0;}
     var dk=null,today=tk();
     if(S.days[today]>0)dk=today;
     else{var ks=Object.keys(S.days).sort().reverse();for(var j=0;j<ks.length;j++){if(S.days[ks[j]]>0){dk=ks[j];break;}}}
